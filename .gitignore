@@ -11,6 +11,7 @@
 # production
 /frontend/build
 /backend/data
+srv
 
 # misc
 .DS_Store

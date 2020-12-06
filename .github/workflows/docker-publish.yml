@@ -16,7 +16,7 @@ on:
 
 env:
   # TODO: Change variable to your image's name.
-  IMAGE_NAME: serverManager
+  IMAGE_NAME: servermanager
 
 jobs:
   # Run tests.
