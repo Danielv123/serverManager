@@ -1,0 +1,23 @@
+{
+  "name": "dscada-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npx nodemon --ignore data/* src/index.js",
+    "format": "prettier --loglevel warn --write \"src/**/*.{jsx,html,src,js,css,md}\""
+  },
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "express": "^4.17.1",
+    "mkdirp": "^1.0.4",
+    "nodemon": "^2.0.4",
+    "socket.io": "^2.3.0"
+  },
+  "devDependencies": {
+    "prettier": "^2.1.2"
+  }
+}
