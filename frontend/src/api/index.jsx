@@ -1,6 +1,7 @@
 import openSocket from "socket.io-client"
 import { sleep } from "../util"
 const socket = openSocket(document.location.host)
+// const socket = openSocket("http://192.168.10.37:8082")
 const id = Math.floor(Math.random() * 10000000)
 socket.on("debug", (x) => console.log("debug", x))
 

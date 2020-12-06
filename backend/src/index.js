@@ -19,22 +19,23 @@ app.get("/info", (req, res) => {
 const { getSensors } = require("./ipmi")
 mkdirp.sync("./data")
 
-// try {
-// 	let data = fs.readFileSync("./data/screens.json", "utf8")
-// 	if (data) {
-// 		screensOnDisk = data
-// 		screens = JSON.parse(data)
-// 		console.log("Loaded screen data from disk")
-// 	}
-// } catch (e) {}
-// function save() {
-// 	if (JSON.stringify(screens, null, 4) !== screensOnDisk) {
-// 		screensOnDisk = JSON.stringify(screens, null, 4)
-// 		fs.writeFileSync("./data/screens.json", JSON.stringify(screens, null, 4))
-// 		console.log("Saved screens")
-// 	}
-// }
-// setInterval(save, 10000)
+let serversOnDisk = ""
+try {
+	let data = fs.readFileSync("./data/servers.json", "utf8")
+	if (data) {
+		serversOnDisk = data
+		servers = JSON.parse(data)
+		console.log("Loaded server data from disk")
+	}
+} catch (e) { }
+function save() {
+	if (JSON.stringify(servers, null, 4) !== serversOnDisk) {
+		serversOnDisk = JSON.stringify(servers, null, 4)
+		fs.writeFileSync("./data/servers.json", JSON.stringify(servers, null, 4))
+		// console.log(Date.now() + "Saved servers")
+	}
+}
+setInterval(save, 60 * 1000) // Autosave once a minute if there are changes
 const clients = [
 	//     {
 	//     id: 1234,
@@ -42,18 +43,18 @@ const clients = [
 	//     socket: {},
 	// }
 ]
-const servers = [{
+var servers = servers || [{
 	name: "R720 main",
 	address: "192.168.10.170",
 	username: "root",
-	password: "Monster123",
+	password: "calvin",
 	sensordataRaw: [],
 	sensordata: []
-},{
+}, {
 	name: "R720 secondary",
 	address: "192.168.10.169",
 	username: "root",
-	password: "Monster123",
+	password: "calvin",
 	sensordataRaw: [],
 	sensordata: []
 }]
@@ -61,9 +62,9 @@ const servers = [{
 async function updateServers() {
 	for (let i in servers) {
 		let config = servers[i]
-		config.sensorDataRaw = await getSensors(config)
+		config.sensordataRaw = await getSensors(config)
 		// Transform sensor data into easier to use format
-		config.sensordata = config.sensorDataRaw.map((sensor, i) => {
+		config.sensordata = config.sensordataRaw.map((sensor, i) => {
 			return {
 				name: sensor[0],
 				value: sensor[1],
@@ -109,6 +110,33 @@ io.on("connection", (socket) => {
 		}
 		clients.push(client)
 		socket.emit("servers", servers)
+		socket.on("updateServer", ({ address, update }) => {
+			console.log("Updating server", address, update)
+			let server = servers.find(x => x.address === address)
+			for (let key of Object.keys(update)) {
+				server[key] = update[key]
+			}
+			broadcast("servers", servers)
+		})
+		socket.on("addServer", ({ server }) => {
+			if (
+				server
+				&& !servers.find(x => x.address == server.address)
+				&& !servers.find(x => x.name == server.name)
+				&& server.name
+				&& server.address
+				&& server.username
+				&& server.password
+				&& Object.keys(server).length === 4
+			) {
+				servers.push(server)
+				broadcast("servers", servers)
+			}
+		})
+		socket.on("deleteServer", ({ address }) => {
+			servers = servers.filter(x => x.address !== address)
+			broadcast("servers", servers)
+		})
 		// socket.on("tagListen", ({ tagname, interval }) => {
 		// 	console.log("Adding listener for", tagname)
 		// 	client.tagListeners.push({ tagname })
