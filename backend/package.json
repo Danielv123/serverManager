@@ -7,7 +7,7 @@
     "start": "node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "npx nodemon --ignore data/* src/index.js",
-    "format": "prettier --loglevel warn --write \"src/**/*.{jsx,html,src,js,css,md}\""
+    "format": "prettier --loglevel warn --write src"
   },
   "author": "",
   "license": "UNLICENSED",

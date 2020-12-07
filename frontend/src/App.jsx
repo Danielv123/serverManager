@@ -2,28 +2,46 @@ import React, { Component } from "react"
 import "antd/dist/antd.dark.css"
 import "./App.css"
 import { getWebclient } from "./api/index"
-import { Layout, Menu, Typography, Card, Row, Col, Statistic, Divider, Tooltip, Tabs, Button, Input, Form, Popover } from "antd"
-import {
-	LaptopOutlined,
-	PlusOutlined,
-	ArrowUpOutlined,
-	ArrowDownOutlined,
-	DeleteOutlined,
-	SaveOutlined,
-} from "@ant-design/icons"
+import Switch from "./components/Switch"
+import { Layout, Menu, Typography, Card, Row, Col, Statistic, Divider, Tooltip, Tabs, Button, Input, Form, Popover, Slider } from "antd"
+import { LaptopOutlined, PlusOutlined, ArrowUpOutlined, ArrowDownOutlined, DeleteOutlined, SaveOutlined } from "@ant-design/icons"
+import InlineSlider from "./components/InlineSlider"
 
 const { TabPane } = Tabs
 const { SubMenu } = Menu
 const { Content, Sider } = Layout
 let socket
 
+let sliderMarks = {
+	0: "0%",
+	25: "25%",
+	50: "50%",
+	75: "75%",
+	100: {
+		style: {
+			color: "#f50",
+		},
+		label: <strong>100%</strong>,
+	},
+}
+
+function getValue(key) {
+	try {
+		return JSON.parse(localStorage[key])
+	} catch (e) {
+		return undefined
+	}
+}
+function setValue(key, value) {
+	localStorage[key] = JSON.stringify(value)
+}
 class App extends Component {
 	constructor(props) {
 		super(props)
 		this.state = {
 			editor: true,
 			servers: [],
-			selectedKeys: [],
+			selectedKeys: getValue("selectedKeys") || [],
 		}
 	}
 	componentDidMount() {
@@ -55,10 +73,12 @@ class App extends Component {
 							onSelect={({ selectedKeys }) => {
 								console.log(selectedKeys)
 								this.setState({ selectedKeys })
+								setValue("selectedKeys", selectedKeys)
 							}}
 							onDeselect={({ selectedKeys }) => {
 								console.log(selectedKeys)
 								this.setState({ selectedKeys })
+								setValue("selectedKeys", selectedKeys)
 							}}
 						>
 							<SubMenu key="servers" icon={<LaptopOutlined />} title="Servers">
@@ -161,6 +181,46 @@ class App extends Component {
 													>
 														<Input />
 													</Form.Item>
+													<Divider>Custom fan control</Divider>
+													<Form.Item label="Custom fan control" name="manualFanControl">
+														<Switch checkedChildren="Enabled" unCheckedChildren="Disabled" />
+													</Form.Item>
+													<Row>
+														<Col span={layout.labelCol.span}></Col>
+														<Col span={layout.wrapperCol.span}>
+															<Form.List {...tailLayout} name="fancurve">
+																{(fields, { add, remove }, { errors }) => (
+																	<>
+																		{fields.map((field, index) => (
+																			<div
+																				style={{
+																					...field.style,
+																					display: "inline-block",
+																				}}
+																			>
+																				<Form.Item {...field}>
+																					<InlineSlider
+																						min={0}
+																						max={100}
+																						vertical
+																						defaultValue={20}
+																						marks={index === fields.length - 1 && sliderMarks} // Show percentage marks on the rightmost slider
+																						// tooltipVisible={true} // Is kinda nice, but cluttered and lags *a lot*
+																					/>
+																				</Form.Item>
+																				<p>{Math.floor((index / (fields.length - 1)) * 100)}°C</p>
+																			</div>
+																		))}
+																		<Form.Item>
+																			<Button type="dashed" onClick={() => add()} icon={<PlusOutlined />}>
+																				Add point to curve
+																			</Button>
+																		</Form.Item>
+																	</>
+																)}
+															</Form.List>
+														</Col>
+													</Row>
 													<Form.Item {...tailLayout}>
 														<Button type="primary" htmlType="submit">
 															<SaveOutlined /> Save
@@ -201,8 +261,8 @@ function renderServerOverview(server) {
 				<Row>
 					{server.sensordata
 						.filter((x) => ["Volts", "Amps", "Watts"].includes(x?.unit))
-						.map((sensor) => (
-							<Tooltip key={sensor.name + sensor.unit} title={`Previous value: ${Math.floor(sensor?.previousValue)}`}>
+						.map((sensor, i) => (
+							<Tooltip key={sensor.name + sensor.unit + i} title={`Previous value: ${Math.floor(sensor?.previousValue)}`}>
 								<Col span={4}>
 									<Statistic
 										title={sensor?.name}

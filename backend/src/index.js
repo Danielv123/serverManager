@@ -4,6 +4,7 @@ const express = require("express")
 const http = require("http")
 
 const port = 8080
+// const port = 8082
 
 var app = express()
 var server = http.createServer(app)
@@ -16,7 +17,7 @@ app.get("/info", (req, res) => {
 	res.send("Dell server monitor express server")
 })
 
-const { getSensors } = require("./ipmi")
+const { getSensors, enableManualFancontrol, enableAutomaticFancontrol, setFanSpeed } = require("./ipmi")
 mkdirp.sync("./data")
 
 let serversOnDisk = ""
@@ -27,7 +28,7 @@ try {
 		servers = JSON.parse(data)
 		console.log("Loaded server data from disk")
 	}
-} catch (e) { }
+} catch (e) {}
 function save() {
 	if (JSON.stringify(servers, null, 4) !== serversOnDisk) {
 		serversOnDisk = JSON.stringify(servers, null, 4)
@@ -43,21 +44,33 @@ const clients = [
 	//     socket: {},
 	// }
 ]
-var servers = servers || [{
-	name: "R720 main",
-	address: "192.168.10.170",
-	username: "root",
-	password: "calvin",
-	sensordataRaw: [],
-	sensordata: []
-}, {
-	name: "R720 secondary",
-	address: "192.168.10.169",
-	username: "root",
-	password: "calvin",
-	sensordataRaw: [],
-	sensordata: []
-}]
+var servers = servers || [
+	{
+		name: "R720 main",
+		address: "192.168.10.170",
+		username: "root",
+		password: "calvin",
+		sensordataRaw: [],
+		sensordata: [],
+	},
+	{
+		name: "R720 secondary",
+		address: "192.168.10.169",
+		username: "root",
+		password: "calvin",
+		sensordataRaw: [],
+		sensordata: [],
+	},
+]
+
+// Startup tasks
+servers.forEach(async (server) => {
+	if (server.manualFanControl) {
+		await enableManualFancontrol(server)
+	} else {
+		await enableAutomaticFancontrol(server)
+	}
+})
 
 async function updateServers() {
 	for (let i in servers) {
@@ -77,17 +90,40 @@ async function updateServers() {
 				AHH: sensor[8],
 				y: sensor[9],
 				trend: Number(sensor[1]) - Number(config.sensordata[i]?.previousValue) || undefined,
-				previousValue: config.sensordata[i]?.value
+				previousValue: config.sensordata[i]?.value,
 			}
 		})
 		broadcast("sensordata", {
 			name: config.name,
 			sensordata: config.sensordata,
 		})
+		if (config.manualFanControl) {
+			let temperature = config.sensordata
+				.filter((x) => x.unit === "degrees C")
+				.map((x) => x.value)
+				.sort((a, b) => b - a)[0]
+
+			// Determine fan speed
+			let table = new Array(100).fill(0)
+			table = table.map((_, i) => {
+				let num1 = Math.max(0, Math.floor(i / (100 / (config.fancurve.length - 1))))
+				let num2 = Math.min(config.fancurve.length - 1, Math.ceil((i + 0.1) / (100 / (config.fancurve.length - 1))))
+				// Interpolate between the numbers on the graph
+				let diff = config.fancurve[num2] - config.fancurve[num1] // Difference in fan % between 20c and 40c
+				let perC = diff / (100 / (config.fancurve.length - 1)) // Difference in fan% between 20c and 21c
+				let lowerC = config.fancurve[num1] // Wanted fan% at 20c
+				return lowerC + perC * (i / (100 / (config.fancurve.length - 1)) - num1) * 20 // Calculate target fan speed for temperature "i"
+			})
+
+			let target_fan_speed = Math.round(table[Math.floor(temperature) || 99])
+			console.log("Highest temperature is", temperature, "Setting fan speed", target_fan_speed, "%")
+			// Set fan speed on iDRAC
+			setFanSpeed(config, target_fan_speed || 40)
+		}
 	}
 }
 function broadcast(channel, data) {
-	clients.forEach(client => client.socket.emit(channel, data))
+	clients.forEach((client) => client.socket.emit(channel, data))
 }
 
 let lastUpdateStart = Date.now()
@@ -110,9 +146,21 @@ io.on("connection", (socket) => {
 		}
 		clients.push(client)
 		socket.emit("servers", servers)
-		socket.on("updateServer", ({ address, update }) => {
+		socket.on("updateServer", async ({ address, update }) => {
 			console.log("Updating server", address, update)
-			let server = servers.find(x => x.address === address)
+			let server = servers.find((x) => x.address === address)
+
+			// If we toggled the manualFanControl option, run IPMI to toggle fan control mode
+			if (server.manualFanControl !== update.manualFanControl) {
+				console.time("Changed fan control state")
+				if (update.manualFanControl) {
+					await enableManualFancontrol(update)
+				} else {
+					await enableAutomaticFancontrol(update)
+				}
+				console.timeEnd("Changed fan control state")
+			}
+
 			for (let key of Object.keys(update)) {
 				server[key] = update[key]
 			}
@@ -120,21 +168,20 @@ io.on("connection", (socket) => {
 		})
 		socket.on("addServer", ({ server }) => {
 			if (
-				server
-				&& !servers.find(x => x.address == server.address)
-				&& !servers.find(x => x.name == server.name)
-				&& server.name
-				&& server.address
-				&& server.username
-				&& server.password
-				&& Object.keys(server).length === 4
+				server &&
+				!servers.find((x) => x.address == server.address) &&
+				!servers.find((x) => x.name == server.name) &&
+				server.name &&
+				server.address &&
+				server.username &&
+				server.password
 			) {
 				servers.push(server)
 				broadcast("servers", servers)
 			}
 		})
 		socket.on("deleteServer", ({ address }) => {
-			servers = servers.filter(x => x.address !== address)
+			servers = servers.filter((x) => x.address !== address)
 			broadcast("servers", servers)
 		})
 		// socket.on("tagListen", ({ tagname, interval }) => {
