@@ -2,6 +2,12 @@
 
 A react web app for monitoring dell servers over IPMI
 
+## Known working hardware
+
+* R720 with iDRAC7 - Monitoring + fan control
+
+If you have it running on different hardware or have ipmi commands for setting fanspeeds on different hardware, please submit a PR or open an issue.
+
 ## Setup
 
 The app is designed to run with docker compose, see the docker-compose file in this repo for a sample deployment. No extra configuration except for changing the exposed port should be needed. Be aware that this project doesn't currently support any form of authentication, so shouldn't be exposed to the internet if it can be avoided.
