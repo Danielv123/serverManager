@@ -13,6 +13,8 @@ RUN npm run build
 
 FROM node:14-alpine
 
+LABEL org.opencontainers.image.source https://github.com/Danielv123/serverManager
+
 # Open a port in the firewall
 EXPOSE 8080
 
