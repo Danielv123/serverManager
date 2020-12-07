@@ -41,8 +41,12 @@ Build it yourself:
 
 Finally, navigate to localhost:8083
 
+Server overview:
+
 ![Image](https://i.imgur.com/5LeLWMA.png)
 
-![Admin interface](https://i.imgur.com/o8spILz.png)
+Admin interface with idrac ipmi connection details and a custom fan curve:
+
+![Admin interface](https://i.imgur.com/sgIaziM.png)
 
 
