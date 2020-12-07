@@ -1,7 +1,7 @@
 import React from "react"
 import { Slider } from "antd"
 
-class InlineSlider extends React.Component {
+class InlineSlider extends React.PureComponent {
 	constructor(props) {
 		super(props)
 	}
