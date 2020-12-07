@@ -23,7 +23,7 @@ class App extends Component {
 		this.state = {
 			editor: true,
 			servers: [],
-			selectedKeys: ["admin"],
+			selectedKeys: [],
 		}
 	}
 	componentDidMount() {
