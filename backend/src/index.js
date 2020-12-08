@@ -2,9 +2,11 @@ const fs = require("fs")
 const mkdirp = require("mkdirp")
 const express = require("express")
 const http = require("http")
+const client = require("prom-client")
+const process = require("process")
 
-const port = 8080
-// const port = 8082
+console.log(process.argv)
+const port = process.argv[2] === "dev" ? 8082 : 8080
 
 var app = express()
 var server = http.createServer(app)
@@ -17,6 +19,18 @@ app.get("/info", (req, res) => {
 	res.send("Dell server monitor express server")
 })
 
+// Set up prometheus
+app.get("/metrics", (req, res) => {
+	res.send(client.register.metrics())
+})
+// client.collectDefaultMetrics()
+const gauge = new client.Gauge({
+	name: "servermanager_statistics_gauge",
+	help: "Contains all gauge statistics from the dell server manager labeled by name and type, ex fan speed or temperature",
+	labelNames: ["name", "type", "unit", "address", "host_name"],
+})
+
+const units = require("./units")
 const { getSensors, enableManualFancontrol, enableAutomaticFancontrol, setFanSpeed } = require("./ipmi")
 mkdirp.sync("./data")
 
@@ -121,6 +135,24 @@ async function updateServers() {
 			setFanSpeed(config, target_fan_speed || 40)
 		}
 	}
+	// Report metrics to prometheus
+	client.register.resetMetrics()
+	for (let config of servers) {
+		config.sensordata
+			.filter((x) => !Number.isNaN(Number(x.value)))
+			.forEach((sensor) => {
+				gauge.set(
+					{
+						name: sensor.name,
+						type: units.unit_to_type[sensor.unit],
+						unit: sensor.unit,
+						address: config.address,
+						host_name: config.name,
+					},
+					Number(sensor.value)
+				)
+			})
+	}
 }
 function broadcast(channel, data) {
 	clients.forEach((client) => client.socket.emit(channel, data))
@@ -160,6 +192,9 @@ io.on("connection", (socket) => {
 				}
 				console.timeEnd("Changed fan control state")
 			}
+
+			// Reset prometheus gauges in case some of the label names were changed
+			client.register.resetMetrics()
 
 			for (let key of Object.keys(update)) {
 				server[key] = update[key]

@@ -37,7 +37,11 @@ function enableAutomaticFancontrol(config) {
 }
 function setFanSpeed(config, speed) {
 	return new Promise((resolve) => {
-		let command = `ipmitool -I lanplus -H ${config.address} -U ${config.username} -P ${config.password} raw 0x30 0x30 0x02 0xff 0x${speed.toString(16).padStart(2, "0")}`
+		if (process.argv[2] !== "dev") {
+			var command = `ipmitool -I lanplus -H ${config.address} -U ${config.username} -P ${config.password} raw 0x30 0x30 0x02 0xff 0x${speed.toString(16).padStart(2, "0")}`
+		} else {
+			var command = "ls"
+		}
 		exec(command, (error, out, err) => {
 			// console.log(error, out, err)
 			// console.log(data)

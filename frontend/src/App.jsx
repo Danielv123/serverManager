@@ -4,7 +4,7 @@ import "./App.css"
 import { getWebclient } from "./api/index"
 import Switch from "./components/Switch"
 import { Layout, Menu, Typography, Card, Row, Col, Statistic, Divider, Tooltip, Tabs, Button, Input, Form, Popover, Slider } from "antd"
-import { LaptopOutlined, PlusOutlined, ArrowUpOutlined, ArrowDownOutlined, DeleteOutlined, SaveOutlined } from "@ant-design/icons"
+import { LaptopOutlined, PlusOutlined, ArrowUpOutlined, ArrowDownOutlined, DeleteOutlined, SaveOutlined, SettingOutlined } from "@ant-design/icons"
 import InlineSlider from "./components/InlineSlider"
 
 const { TabPane } = Tabs
@@ -86,7 +86,9 @@ class App extends Component {
 									<Menu.Item key={server.address}>{server.name}</Menu.Item>
 								))}
 							</SubMenu>
-							<Menu.Item key="admin">Admin</Menu.Item>
+							<Menu.Item key="admin" icon={<SettingOutlined />}>
+								Admin
+							</Menu.Item>
 						</Menu>
 					</Sider>
 					<Layout>
