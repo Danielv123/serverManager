@@ -67,7 +67,7 @@ class App extends Component {
 						<Menu
 							multiple
 							mode="inline"
-							defaultSelectedKeys={[this.state.currentServer]}
+							defaultSelectedKeys={this.state.selectedKeys}
 							defaultOpenKeys={["servers"]}
 							style={{ height: "100%", borderRight: 0 }}
 							onSelect={({ selectedKeys }) => {
