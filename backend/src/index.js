@@ -2,7 +2,7 @@ const fs = require("fs")
 const mkdirp = require("mkdirp")
 const express = require("express")
 const http = require("http")
-const client = require("prom-client")
+const promclient = require("prom-client")
 const process = require("process")
 
 console.log(process.argv)
@@ -21,10 +21,10 @@ app.get("/info", (req, res) => {
 
 // Set up prometheus
 app.get("/metrics", (req, res) => {
-	res.send(client.register.metrics())
+	res.send(promclient.register.metrics())
 })
 // client.collectDefaultMetrics()
-const gauge = new client.Gauge({
+const gauge = new promclient.Gauge({
 	name: "servermanager_statistics_gauge",
 	help: "Contains all gauge statistics from the dell server manager labeled by name and type, ex fan speed or temperature",
 	labelNames: ["name", "type", "unit", "address", "host_name"],
@@ -136,7 +136,7 @@ async function updateServers() {
 		}
 	}
 	// Report metrics to prometheus
-	client.register.resetMetrics()
+	promclient.register.resetMetrics()
 	for (let config of servers) {
 		config.sensordata
 			.filter((x) => !Number.isNaN(Number(x.value)))
@@ -179,7 +179,7 @@ io.on("connection", (socket) => {
 		clients.push(client)
 		socket.emit("servers", servers)
 		socket.on("updateServer", async ({ address, update }) => {
-			console.log("Updating server", address, update)
+			console.log("Updating server", address, cleanSensitive(update))
 			let server = servers.find((x) => x.address === address)
 
 			// If we toggled the manualFanControl option, run IPMI to toggle fan control mode
@@ -193,13 +193,13 @@ io.on("connection", (socket) => {
 				console.timeEnd("Changed fan control state")
 			}
 
-			// Reset prometheus gauges in case some of the label names were changed
-			client.register.resetMetrics()
-
 			for (let key of Object.keys(update)) {
 				server[key] = update[key]
 			}
 			broadcast("servers", servers)
+
+			// Reset prometheus gauges in case some of the label names were changed
+			promclient.register.resetMetrics()
 		})
 		socket.on("addServer", ({ server }) => {
 			if (
@@ -232,3 +232,8 @@ io.on("connection", (socket) => {
 		// }, 1000);
 	})
 })
+function cleanSensitive(object) {
+	let clean = { ...object }
+	if (clean.password) clean.password = "hidden"
+	return clean
+}

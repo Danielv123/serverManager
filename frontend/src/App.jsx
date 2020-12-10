@@ -3,7 +3,7 @@ import "antd/dist/antd.dark.css"
 import "./App.css"
 import { getWebclient } from "./api/index"
 import Switch from "./components/Switch"
-import { Layout, Menu, Typography, Card, Row, Col, Statistic, Divider, Tooltip, Tabs, Button, Input, Form, Popover, Slider } from "antd"
+import { Layout, Menu, Typography, Card, Row, Col, Statistic, Divider, Tooltip, Tabs, Button, Input, Form, Popover } from "antd"
 import { LaptopOutlined, PlusOutlined, ArrowUpOutlined, ArrowDownOutlined, DeleteOutlined, SaveOutlined, SettingOutlined } from "@ant-design/icons"
 import InlineSlider from "./components/InlineSlider"
 
@@ -49,7 +49,7 @@ class App extends Component {
 		socket.on("servers", (servers) => this.setState({ servers }))
 		socket.on("sensordata", (data) => {
 			let servers = this.state.servers
-			let server = servers.find((x) => x.name == data.name)
+			let server = servers.find((x) => x.name === data.name)
 			if (server) {
 				server.sensordata = data.sensordata
 				this.setState({ servers })
@@ -191,7 +191,7 @@ class App extends Component {
 														<Col span={layout.labelCol.span}></Col>
 														<Col span={layout.wrapperCol.span}>
 															<Form.List {...tailLayout} name="fancurve">
-																{(fields, { add, remove }, { errors }) => (
+																{(fields, { add }) => (
 																	<>
 																		{fields.map((field, index) => (
 																			<div
@@ -269,7 +269,7 @@ function renderServerOverview(server) {
 									<Statistic
 										title={sensor?.name}
 										value={sensor?.value}
-										precision={0}
+										precision={sensor.unit.includes("Amps") ? 1 : 0}
 										// prefix={sensor?.trend > 0 && <ArrowUpOutlined /> || sensor?.trend < 0 && <ArrowDownOutlined />}
 										suffix={
 											<span>
