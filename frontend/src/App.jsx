@@ -261,7 +261,7 @@ function renderServerOverview(server) {
 				<Typography.Title>{server.name}</Typography.Title>
 				<Divider orientation="left">Power</Divider>
 				<Row>
-					{server.sensordata
+					{server.sensordata && server.sensordata
 						.filter((x) => ["Volts", "Amps", "Watts"].includes(x?.unit))
 						.map((sensor, i) => (
 							<Tooltip key={sensor.name + sensor.unit + i} title={`Previous value: ${Math.floor(sensor?.previousValue)}`}>
@@ -290,7 +290,7 @@ function renderServerOverview(server) {
 				</Row>
 				<Divider orientation="left">Temperature</Divider>
 				<Row>
-					{server.sensordata
+					{server.sensordata && server.sensordata
 						.filter((x) => x?.unit === "degrees C")
 						.map((sensor) => (
 							<Tooltip title={`Previous value: ${Math.floor(sensor?.previousValue)}`}>
@@ -310,7 +310,7 @@ function renderServerOverview(server) {
 				</Row>
 				<Divider orientation="left">Fans</Divider>
 				<Row>
-					{server.sensordata
+					{server.sensordata && server.sensordata
 						.filter((x) => ["RPM"].includes(x?.unit))
 						.map((sensor) => (
 							<Tooltip title={`Previous value: ${Math.floor(sensor?.previousValue)}`}>
