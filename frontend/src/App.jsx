@@ -269,7 +269,7 @@ function renderServerOverview(server) {
 									<Statistic
 										title={sensor?.name}
 										value={sensor?.value}
-										precision={sensor.unit.includes("Amps") ? 1 : 0}
+										precision={sensor.unit.includes("Amps") ? 2 : 0}
 										// prefix={sensor?.trend > 0 && <ArrowUpOutlined /> || sensor?.trend < 0 && <ArrowDownOutlined />}
 										suffix={
 											<span>
