@@ -23,9 +23,9 @@ app.get("/info", (req, res) => {
 app.get("/metrics", (req, res) => {
 	res.send(promclient.register.metrics())
 })
-// promclient.collectDefaultMetrics({
-// 	labels: { application: "serverManager" },
-// })
+promclient.collectDefaultMetrics({
+	labels: { application: "serverManager" },
+})
 const gauge = new promclient.Gauge({
 	name: "servermanager_statistics_gauge",
 	help: "Contains all gauge statistics from the dell server manager labeled by name and type, ex fan speed or temperature",
