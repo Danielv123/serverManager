@@ -23,7 +23,9 @@ app.get("/info", (req, res) => {
 app.get("/metrics", (req, res) => {
 	res.send(promclient.register.metrics())
 })
-// client.collectDefaultMetrics()
+// promclient.collectDefaultMetrics({
+// 	labels: { application: "serverManager" },
+// })
 const gauge = new promclient.Gauge({
 	name: "servermanager_statistics_gauge",
 	help: "Contains all gauge statistics from the dell server manager labeled by name and type, ex fan speed or temperature",
@@ -158,8 +160,8 @@ function broadcast(channel, data) {
 	clients.forEach((client) => client.socket.emit(channel, data))
 }
 
-let lastUpdateStart = Date.now()
 async function updateServerLoop() {
+	let lastUpdateStart = Date.now()
 	console.time("updateServers")
 	await updateServers()
 	console.timeEnd("updateServers")
