@@ -7,7 +7,7 @@
     "@ant-design/icons": "^4.2.2",
     "@testing-library/jest-dom": "^5.11.6",
     "@testing-library/react": "^11.2.2",
-    "antd": "^4.6.6",
+    "antd": "^4.16.13",
     "react": "^17.0.1",
     "react-contexify": "^4.1.1",
     "react-dom": "^17.0.1",
