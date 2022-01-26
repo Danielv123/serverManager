@@ -5,6 +5,7 @@ A react web app for monitoring dell servers over IPMI
 ## Known working hardware
 
 * R720 with iDRAC7 - Monitoring + fan control
+* R620 [#3](/../../issues/25)
 * R710 with iDRAC6 (see issue #3)
 
 If you have it running on different hardware or have ipmi commands for setting fanspeeds on different hardware, please submit a PR or open an issue.
