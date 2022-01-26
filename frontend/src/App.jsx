@@ -183,6 +183,18 @@ class App extends Component {
 													>
 														<Input />
 													</Form.Item>
+													<Form.Item
+														label="Warning Speed"
+														name="warnspeed"
+														rules={[
+															{
+																required: true,
+																message: "Please input the fan threshold RPM",
+															},
+														]}
+													>
+														<Input />
+													</Form.Item>
 													<Divider>Custom fan control</Divider>
 													<Form.Item label="Custom fan control" name="manualFanControl">
 														<Switch checkedChildren="Enabled" unCheckedChildren="Disabled" />
@@ -325,7 +337,7 @@ function renderServerOverview(server) {
 											</span>
 										}
 										valueStyle={{
-											color: (Number(sensor.value) > Number(sensor.WL) && Number(sensor.value) < 3000 && " ") /*"#3f8600" green */ || "#cf1322",
+											color: (Number(sensor.value) > Number(sensor.WL) && Number(sensor.value) < Number(server.warnspeed) && " ") /*"#3f8600" green */ || "#cf1322",
 										}}
 									/>
 								</Col>
