@@ -165,7 +165,7 @@ class App extends Component {
 														rules={[
 															{
 																required: true,
-																message: "Please the idrac username (usually root)",
+																message: "Please input idrac username (usually root)",
 															},
 														]}
 													>
@@ -181,7 +181,7 @@ class App extends Component {
 															},
 														]}
 													>
-														<Input />
+														<Input.Password />
 													</Form.Item>
 													<Divider>Custom fan control</Divider>
 													<Form.Item label="Custom fan control" name="manualFanControl">
