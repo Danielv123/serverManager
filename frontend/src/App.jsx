@@ -114,6 +114,7 @@ class App extends Component {
 															address: "192.168.0.1",
 															username: "root",
 															password: "calvin",
+															warnspeed: "3000",
 														},
 													})
 												}}
