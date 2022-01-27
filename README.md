@@ -22,7 +22,7 @@ services:
     image: ghcr.io/danielv123/servermanager:latest
     restart: unless-stopped
     ports:
-        8083:8080 # external:internal
+      - 8083:8080 # external:internal
     volumes:
       - /srv/serverManager:/usr/src/app/data
   ouroboros: # For autoupdate, feel free to remove
