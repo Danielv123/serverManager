@@ -16,7 +16,7 @@
     "mkdirp": "^1.0.4",
     "nodemon": "^2.0.17",
     "prom-client": "^12.0.0",
-    "socket.io": "^2.4.1"
+    "socket.io": "^2.5.0"
   },
   "devDependencies": {
     "prettier": "^2.1.2"
