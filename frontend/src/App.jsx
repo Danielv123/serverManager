@@ -1,6 +1,5 @@
 import React, { Component } from "react"
-import "antd/dist/antd.dark.css"
-import "./App.css"
+import "antd/dist/antd.css"
 import { getWebclient } from "./api/index"
 import Switch from "./components/Switch"
 import { Layout, Menu, Typography, Card, Row, Col, Statistic, Divider, Tooltip, Tabs, Button, Input, Form, Popover } from "antd"
