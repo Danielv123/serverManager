@@ -1,4 +1,4 @@
-FROM node:22 AS builder
+FROM node:24 AS builder
 
 WORKDIR /usr/src/app
 
@@ -11,9 +11,9 @@ RUN npm ci
 COPY frontend/ .
 RUN npm run build
 
-FROM node:22-alpine
+FROM node:24-alpine
 
-LABEL org.opencontainers.image.source https://github.com/Danielv123/serverManager
+LABEL org.opencontainers.image.source=https://github.com/Danielv123/serverManager
 
 # Open a port in the firewall
 EXPOSE 8080
