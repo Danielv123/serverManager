@@ -2,27 +2,14 @@ import React, { Component } from "react"
 import "antd/dist/antd.css"
 import { getWebclient } from "./api/index"
 import Switch from "./components/Switch"
+import FanCurveGraph from "./components/FanCurveGraph"
 import { Layout, Menu, Typography, Card, Row, Col, Statistic, Divider, Tooltip, Tabs, Button, Input, Form, Popover } from "antd"
 import { LaptopOutlined, PlusOutlined, ArrowUpOutlined, ArrowDownOutlined, DeleteOutlined, SaveOutlined, SettingOutlined } from "@ant-design/icons"
-import InlineSlider from "./components/InlineSlider"
 
 const { TabPane } = Tabs
 const { SubMenu } = Menu
 const { Content, Sider } = Layout
 let socket
-
-let sliderMarks = {
-	0: "0%",
-	25: "25%",
-	50: "50%",
-	75: "75%",
-	100: {
-		style: {
-			color: "#f50",
-		},
-		label: <strong>100%</strong>,
-	},
-}
 
 function getValue(key) {
 	try {
@@ -202,37 +189,7 @@ class App extends Component {
 													<Row>
 														<Col span={layout.labelCol.span}></Col>
 														<Col span={layout.wrapperCol.span}>
-															<Form.List {...tailLayout} name="fancurve">
-																{(fields, { add }) => (
-																	<>
-																		{fields.map((field, index) => (
-																			<div
-																				style={{
-																					...field.style,
-																					display: "inline-block",
-																				}}
-																			>
-																				<Form.Item {...field}>
-																					<InlineSlider
-																						min={0}
-																						max={100}
-																						vertical
-																						defaultValue={20}
-																						marks={index === fields.length - 1 && sliderMarks} // Show percentage marks on the rightmost slider
-																						// tooltipVisible={true} // Is kinda nice, but cluttered and lags *a lot*
-																					/>
-																				</Form.Item>
-																				<p>{Math.floor((index / (fields.length - 1)) * 100)}°C</p>
-																			</div>
-																		))}
-																		<Form.Item>
-																			<Button type="dashed" onClick={() => add()} icon={<PlusOutlined />}>
-																				Add point to curve
-																			</Button>
-																		</Form.Item>
-																	</>
-																)}
-															</Form.List>
+															<FanCurveGraph />
 														</Col>
 													</Row>
 													<Form.Item {...tailLayout}>
