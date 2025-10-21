@@ -5,6 +5,8 @@ const http = require("http")
 const promclient = require("prom-client")
 const process = require("process")
 
+const { calculateManualFanSpeed } = require("./fanControl")
+
 console.log(process.argv)
 const port = process.argv[2] === "dev" ? 8082 : 8080
 
@@ -20,8 +22,10 @@ app.get("/info", (req, res) => {
 })
 
 // Set up prometheus
-app.get("/metrics", (req, res) => {
-	res.send(promclient.register.metrics())
+app.get("/metrics", async (req, res) => {
+	const metrics = await promclient.register.metrics()
+	res.set("Content-Type", promclient.register.contentType)
+	res.send(metrics)
 })
 promclient.collectDefaultMetrics({
 	labels: { application: "serverManager" },
@@ -116,27 +120,9 @@ async function updateServers() {
 			sensordata: config.sensordata,
 		})
 		if (config.manualFanControl) {
-			let temperature = config.sensordata
-				.filter((x) => x.unit === "degrees C")
-				.map((x) => x.value)
-				.sort((a, b) => b - a)[0]
-
-			// Determine fan speed
-			let table = new Array(100).fill(0)
-			table = table.map((_, i) => {
-				let num1 = Math.max(0, Math.floor(i / (100 / (config.fancurve.length - 1))))
-				let num2 = Math.min(config.fancurve.length - 1, Math.ceil((i + 0.1) / (100 / (config.fancurve.length - 1))))
-				// Interpolate between the numbers on the graph
-				let diff = config.fancurve[num2] - config.fancurve[num1] // Difference in fan % between 20c and 40c
-				let perC = diff / (100 / (config.fancurve.length - 1)) // Difference in fan% between 20c and 21c
-				let lowerC = config.fancurve[num1] // Wanted fan% at 20c
-				return lowerC + perC * (i / (100 / (config.fancurve.length - 1)) - num1) * 20 // Calculate target fan speed for temperature "i"
-			})
-
-			let target_fan_speed = Math.round(table[Math.floor(temperature) || 99])
-			console.log("Highest temperature is", temperature, "Setting fan speed", target_fan_speed, "%")
-			// Set fan speed on iDRAC
-			setFanSpeed(config, target_fan_speed || 40)
+			const { targetFanSpeed, highestTemperature, reason } = calculateManualFanSpeed(config)
+			console.log("Highest temperature is", highestTemperature, reason ? `reason=${reason}` : "", "Setting fan speed", targetFanSpeed, "%")
+			setFanSpeed(config, targetFanSpeed)
 		}
 	}
 	// Report metrics to prometheus
