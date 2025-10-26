@@ -1,0 +1,23 @@
+version: "3.3"
+services:
+  serverManager:
+    image: ghcr.io/danielv123/servermanager:latest
+    restart: unless-stopped
+    ports:
+      - 8083:8080 # external:internal
+    volumes:
+      - /srv/serverManager:/usr/src/app/data
+  ouroboros: # For autoupdate, feel free to remove
+    container_name: ouroboros
+    hostname: ouroboros
+    image: pyouroboros/ouroboros
+    environment:
+      - CLEANUP=true
+      - INTERVAL=86400
+      - LOG_LEVEL=info
+      - SELF_UPDATE=true
+      - IGNORE=mongo influxdb postgres mariadb
+      - TZ=America/Chicago
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
