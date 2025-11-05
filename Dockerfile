@@ -1,17 +1,17 @@
-FROM node:24 AS builder
+FROM node:18 AS builder
 
 WORKDIR /usr/src/app
 
 # Add package files and install dependencies
 # Its important to copy in package files first to avoid caching issues
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+COPY frontend/package.json ./
+RUN npm i
 
 # Copy rest of the project and build
 COPY frontend/ .
 RUN npm run build
 
-FROM node:24-alpine
+FROM node:14-alpine
 
 LABEL org.opencontainers.image.source=https://github.com/Danielv123/serverManager
 
@@ -22,8 +22,8 @@ RUN apk add ipmitool
 
 WORKDIR /usr/src/app
 
-COPY backend/package.json backend/package-lock.json ./
-RUN npm ci --omit=dev
+COPY backend/package.json ./
+RUN npm i --only=production
 
 # Copy rest of the backend
 COPY backend/src ./src
