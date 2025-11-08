@@ -2,12 +2,11 @@ name: Docker
 
 on:
   push:
-    # Publish `master` as Docker `latest` image.
+    # Publish Docker images for any branch push.
     branches:
-      - master
-      - dev
+      - '**'
 
-    # Publish `v1.2.3` tags as releases.
+    # Publish `v1.2.3` tags as releases (will also tag image as `latest`).
     tags:
       - v*
 
@@ -55,6 +54,15 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Determine branch tag
+        id: branch_tag
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/')
+        shell: bash
+        run: |
+          ref="${GITHUB_REF#refs/heads/}"
+          safe="${ref//\//-}"
+          echo "value=${safe}" >> "$GITHUB_OUTPUT"
+
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -65,7 +73,8 @@ jobs:
             type=ref,event=tag
             type=ref,event=pr
             type=sha,format=long
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            type=raw,value=${{ steps.branch_tag.outputs.value }},enable=${{ steps.branch_tag.outputs.value != '' }}
 
       - name: Log in to GitHub Container Registry
         if: github.event_name == 'push'
@@ -80,6 +89,6 @@ jobs:
         with:
           context: .
           file: Dockerfile
-          push: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && github.ref == 'refs/heads/master' }}
+          push: ${{ github.event_name == 'push' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
